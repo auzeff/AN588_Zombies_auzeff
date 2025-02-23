@@ -27,8 +27,6 @@ z <- read.csv(zombies, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 
 ```{r}
 # Making a function to print nicely formatted means (I spent way too long on this)
-print(paste("Mean height is", mean(z$height)))
-
 nice_mean <- function(x) {
   y <- sub("^z\\$", "", deparse(substitute(x))) # converting the input into a string and removing the "z$"
   y <- gsub("_", " ", y) # replacing any potential underscores with spaces
