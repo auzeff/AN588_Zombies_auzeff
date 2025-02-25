@@ -1,0 +1,29 @@
+---
+title: "Zombies homework"
+author: "Akiva Zeff"
+date: "`r Sys.Date()`"
+output: rmdformats::readthedown
+---
+
+## 1. Population mean and SD
+
+***
+
+## 2. Boxplots
+
+***
+
+## 3. Scatterplots
+
+***
+
+## 4. Checking distribution types
+
+***
+
+## 5. Sampling
+
+***
+
+## 6. More samples
+
