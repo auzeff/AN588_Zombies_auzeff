@@ -1,9 +1,11 @@
 ---
-title: "Homework 3"
+title: "AN 588 Homework 3"
 author: "Akiva Zeff"
 format:
   html:
     toc : true
+    toc-depth: 4
+    toc-location: left
     toc-title: "Questions"
 editor: visual
 theme: journal
@@ -18,6 +20,7 @@ theme: journal
 # install.packages("curl")
 # install.packages("ggplot")
 # install.packages("gridExtra")
+# install.packages("car")
 ```
 
 ```{r}
@@ -149,6 +152,12 @@ Both height and weight seem to be positively correlated with age. However, weigh
 *Using histograms and Q-Q plots, check whether the quantitative variables seem to be drawn from a normal distribution. Which seem to be and which do not? For those that are not normal, can you determine from which common distribution they are drawn?*
 
 ```{r}
+library(car)
+
+# This whole thing here is purely for the purpose of making it so that the CIs for my QQ plots have random colors, but none of the colors repeat.  As such, it has to be outside of the function.  This is purely for fun.
+random_colors <- sample(c(2, 3, 4, 5, 7, 8)) # shuffling the colors so that the order isn't always the same.  These numbers are my favorite carPalette() colors.
+color_index <- 1 # tracks the index of the colors
+
 # Making a function to generate each pair of plots
 plots <- function(x) {
   y <- sub("^z\\$", "", deparse(substitute(x)))
@@ -159,9 +168,9 @@ plots <- function(x) {
   hist(st, probability = TRUE, main = paste("Standardized histogram of", y),  xlab = y, ylab = "probability")
     curve(dnorm(x, 0, 1), -4, 4, ylim = c(0, 0.4), add = TRUE, col = "cornflowerblue") # plotting a normal curve on the histogram
   
-  # Generating the QQ plot
-  qqnorm(x, main = paste("Normal QQ plot of", y))
-  qqline(x, col = "cornflowerblue")
+  # Generating the QQ plot using the {car} package
+  qqPlot(x, main = paste("QQ plot of", y, "w/ confidence interval"), col = carPalette()[1], col.lines = carPalette()[random_colors[color_index]], id = FALSE)
+  color_index <<- (color_index %% length(random_colors)) + 1 # increases the index by one each time the function is run (up to 6)
 }
 ```
 
@@ -169,14 +178,16 @@ plots <- function(x) {
 
 ```{r}
 plots(z$height)
+shapiro.test(z$height) # Shapiro-Wilk test for normality.  A p-value greater than 0.05 indicates approximate normal distribution
 ```
 
-Height looks to be normal.
+Height looks to be normally distributed.
 
 #### Weight
 
 ```{r}
 plots(z$weight)
+shapiro.test(z$weight)
 ```
 
 Weight also looks to be normal.
@@ -185,14 +196,16 @@ Weight also looks to be normal.
 
 ```{r}
 plots(z$age)
+shapiro.test(z$age)
 ```
 
-Age is seemingly also normal.
+Age is also normal.
 
 #### Zombies killed
 
 ```{r}
 plots(z$zombies_killed)
+shapiro.test(z$zombies_killed)
 ```
 
 The number of zombies killed is an integer, and is unsurprisingly not a normal distribution. In order to figure out what it is, I'm going to start by plotting it not standardized:
@@ -201,7 +214,7 @@ The number of zombies killed is an integer, and is unsurprisingly not a normal d
 hist(z$zombies_killed, probability = TRUE, main = "Histogram of zombies killed",  xlab = "zombies killed", ylab = "probability")
 ```
 
-This looks to me more like a Poisson distribution, which would make sense as it is used for counts of independently occuring events. I can generate a probability mass function for a Poisson distribution to compare it to:
+This looks to me more like a Poisson distribution, which would make sense as it is used for counts of independently occurring events. I can generate a probability mass function for a Poisson distribution to compare it to:
 
 ```{r}
 barplot(dpois(0:11, mean(z$zombies_killed)), names.arg = 0:11, space = 0, xlab = "x", ylab = "probability", main = "Poisson PMF")
@@ -228,9 +241,10 @@ Given a p-value of 1, I think it's safe to say that these values were drawn from
 
 ```{r}
 plots(z$years_of_education)
+shapiro.test(z$years_of_education)
 ```
 
-Again, clearly not a normal distribution. I'll unstandardize and try the Poisson distribution again:
+Again, clearly not a normal distribution. I'll un-standardize and try the Poisson distribution again:
 
 ```{r}
 hist(z$years_of_education, probability = TRUE, main = "Histogram of years of education",  xlab = "zombies killed", ylab = "probability")
@@ -369,6 +383,11 @@ sd_vs_se <- function(x, y) {
 }
 
 # I'll also update my old plots() function for use with these variables
+  
+  # Again, this is just for the random colors:
+  random_colors2 <- sample(c(2, 3, 4, 5, 7, 8)) # different variables for truly independent order
+  color_index2 <- 1
+
 mean_plots <- function(x) {
   y <- sub("^sample_means\\$", "", deparse(substitute(x)))
   y <- gsub("_", " ", y)
@@ -376,11 +395,11 @@ mean_plots <- function(x) {
 
   # Histogram
   hist(st, probability = TRUE, main = paste("Standardized histogram of", y),  xlab = y, ylab = "probability")
-    curve(dnorm(x, 0, 1), -4, 4, ylim = c(0, 0.4), add = TRUE, col = "cornflowerblue") # plotting a normal curve on the histogram
+    curve(dnorm(x, 0, 1), -4, 4, ylim = c(0, 0.4), add = TRUE, col = "cornflowerblue")
   
   # QQ plot
-  qqnorm(x, main = paste("Normal QQ plot of", y))
-  qqline(x, col = "cornflowerblue")
+  qqPlot(x, main = paste("QQ plot of", y, "w/ confidence interval"), col = carPalette()[1], col.lines = carPalette()[random_colors2[color_index2]], id = FALSE)
+  color_index2 <<- (color_index2 %% length(random_colors2)) + 1
 }
 ```
 
@@ -390,6 +409,7 @@ mean_plots <- function(x) {
 nice_mean(sample_means$height)
 nice_sd(sample_means$height)
 sd_vs_se(sample_means$height, zs$height)
+shapiro.test(sample_means$height)
 
 mean_plots(sample_means$height)
 ```
@@ -400,6 +420,7 @@ mean_plots(sample_means$height)
 nice_mean(sample_means$weight)
 nice_sd(sample_means$weight)
 sd_vs_se(sample_means$weight, zs$weight)
+shapiro.test(sample_means$weight)
 
 mean_plots(sample_means$weight)
 ```
@@ -410,6 +431,7 @@ mean_plots(sample_means$weight)
 nice_mean(sample_means$age)
 nice_sd(sample_means$age)
 sd_vs_se(sample_means$age, zs$age)
+shapiro.test(sample_means$age)
 
 mean_plots(sample_means$age)
 ```
@@ -420,6 +442,7 @@ mean_plots(sample_means$age)
 nice_mean(sample_means$zombies_killed)
 nice_sd(sample_means$zombies_killed)
 sd_vs_se(sample_means$zombies_killed, zs$zombies_killed)
+shapiro.test(sample_means$zombies_killed)
 
 mean_plots(sample_means$zombies_killed)
 ```
@@ -430,8 +453,11 @@ mean_plots(sample_means$zombies_killed)
 nice_mean(sample_means$years_of_education)
 nice_sd(sample_means$years_of_education)
 sd_vs_se(sample_means$years_of_education, zs$years_of_education)
+shapiro.test(sample_means$years_of_education)
 
 mean_plots(sample_means$years_of_education)
 ```
 
-As we can see, the sample deviations of the means are generally very similar to the standard errors calculate in question 5. The histograms and QQ plots also indicate that these distributions are roughly normal, including those that weren't normal at all in our initial sampling. This makes sense, as in this case we're not graphing the distributions of the variables themselves, but rather the means of our samples of these variables; as such, we would expect them to be normally distributed about the population mean (the Central Limit Theorem).
+As we can see, the sample deviations of the means are generally very similar to the standard errors calculate in question 5. The plots and Shapiro-Wilk test indicate that these distributions are roughly normal (at least for my samples - keep in mind that each run of this code is random). The interesting thing is that the distribution of our sample means for zombies killed and years of education are normal, despite the fact that those variable weren't normal at all in our initial sampling. Again, this makes sense in light of the Central Limit Theorem – after all, we're not graphing the distributions of the variables themselves, but rather the means of our samples of these variables.
+
+I didn't really encounter any challenges in this assignment that I didn't bring upon myself. I put in a lot of extra effort to automate as much as possible with functions, which at times gave me grief - see for example the workarounds I had to create to use the column names in my text in Question 1 or to generate random, non-repeating colors in question 4. However, I found the base assignment straightforward enough.
