@@ -37,6 +37,9 @@ z <- read.csv(zombies, header = TRUE, sep = ",", stringsAsFactors = FALSE)
 *Calculate the population mean and standard deviation for each quantitative random variable (height, weight, age, number of zombies killed, and years of education).*
 
 ```{r}
+# First, it would be convenient to have a dataset with only numeric columns.  For simplicity, I'll still use the given dataset for most steps.
+z_num <- z[sapply(z, is.numeric)]
+
 # Making a function to print nicely formatted means (I spent way too long on this)
 nice_mean <- function(x) {
   y <- sub("^z\\$", "", deparse(substitute(x))) # converting the input into a string and removing the "z$"
@@ -69,6 +72,13 @@ nice_sd(z$weight)
 nice_sd(z$age)
 nice_sd(z$zombies_killed)
 nice_sd(z$years_of_education)
+
+# While I designed my code to print nicely formatted responses, it would also be good to have a dataframe containing just the numeric values of each calculation.  I can make that easily like so:
+pop_means <- sapply(z_num, mean)
+pop_sds <- sapply(z_num, pop_sd)
+pop_stats <- data.frame(Mean = pop_means, SD = pop_sds)
+pop_stats <- pop_stats[-1, ] # removing the id row
+pop_stats
 ```
 
 ------------------------------------------------------------------------
@@ -355,9 +365,6 @@ ci_pois(zs$years_of_education) # using my Poisson CI function
 *Now draw 99 more random samples of 30 zombie apocalypse survivors, and calculate the mean for each variable for each of these samples. Together with the first sample you drew, you now have a set of 100 means for each variable (each based on 30 observations), which constitutes a sampling distribution for each variable. What are the means and standard deviations of this distribution of means for each variable? How do the standard deviations of means compare to the standard errors estimated in \[5\]? What do these sampling distributions look like (a graph might help here)? Are they normally distributed? What about for those variables that you concluded were not originally drawn from a normal distribution?*
 
 ```{r}
-# I start by making a new data frame that only contains the relevant columns
-z_num <- z[sapply(z, is.numeric)]
-
 # I sample 99 more times and compute the means all in one go
 sample_means <- replicate(99, colMeans(z_num[sample(nrow(z_num), 30, replace = FALSE), ]), simplify = TRUE)
 sample_means <- as.data.frame(t(sample_means)) # converting to a dataframe
